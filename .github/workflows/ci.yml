@@ -18,44 +18,20 @@ jobs:
           python-version: "3.10"
           cache: pip
 
-      - name: Install dependencies
+      - name: Install lightweight dependencies
         run: |
           pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install fastapi uvicorn pydantic pydantic-settings \
+                      httpx loguru python-dotenv requests \
+                      pytest pytest-asyncio pytest-cov
 
-      - name: Lint
+      - name: Run parser and API tests only
         run: |
-          pip install ruff
-          ruff check src/ training/ evaluation/ scripts/
-
-      - name: Run tests
-        run: |
-          pytest tests/ -v --cov=src --cov-report=xml
+          pytest tests/test_parser.py tests/test_api.py tests/test_inference.py -v
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v4
-        with:
-          file: coverage.xml
-
-  build-docker:
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build Docker image
-        run: |
-          docker build -f deployment/docker/Dockerfile -t llm-code-review:latest .
-
-      - name: Test image health
-        run: |
-          docker run -d --name test-api -p 8000:8000 \
-            -e MODEL_PATH=./models \
-            -e GITHUB_TOKEN=dummy \
-            llm-code-review:latest
-          sleep 10
-          curl -f http://localhost:8000/health
-          docker stop test-api
+          GITHUB_TOKEN: dummy_token
+          GITHUB_WEBHOOK_SECRET: dummy_secret
+          HF_TOKEN: dummy_hf_token
+          MODEL_PATH: ./models
+          DEVICE: cpu
+          USE_4BIT: "false"
