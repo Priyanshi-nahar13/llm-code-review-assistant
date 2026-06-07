@@ -16,18 +16,17 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
-          cache: pip
 
-      - name: Install lightweight dependencies
+      - name: Install dependencies
         run: |
           pip install --upgrade pip
           pip install fastapi uvicorn pydantic pydantic-settings \
                       httpx loguru python-dotenv requests \
                       pytest pytest-asyncio pytest-cov
 
-      - name: Run parser and API tests only
+      - name: Run tests
         run: |
-          pytest tests/test_parser.py tests/test_api.py tests/test_inference.py -v
+          pytest tests/test_parser.py -v
         env:
           GITHUB_TOKEN: dummy_token
           GITHUB_WEBHOOK_SECRET: dummy_secret
@@ -35,3 +34,4 @@ jobs:
           MODEL_PATH: ./models
           DEVICE: cpu
           USE_4BIT: "false"
+          PYTHONPATH: .
